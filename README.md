@@ -5,7 +5,7 @@ A comprehensive performance testing framework built with Apache JMeter following
 ## Project Structure
 
 ```
-ActiveCleaners-Performance-Test/
+Performance-Test-Project/
 ├── jmeter/
 │   ├── config/                 # Configuration files
 │   │   ├── user.properties     # JMeter user settings
