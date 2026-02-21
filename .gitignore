@@ -1,0 +1,5 @@
+jmeter/results/*
+*.jtl
+*.log
+*.csv
+*.html
