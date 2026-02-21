@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Common Assertions Fragment">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="P99_THRESHOLD" elementType="Argument">
+            <stringProp name="Argument.name">P99_THRESHOLD</stringProp>
+            <stringProp name="Argument.value">${__P(P99_THRESHOLD,2000)}</stringProp>
+          </elementProp>
+          <elementProp name="P95_THRESHOLD" elementType="Argument">
+            <stringProp name="Argument.name">P95_THRESHOLD</stringProp>
+            <stringProp name="Argument.value">${__P(P95_THRESHOLD,1000)}</stringProp>
+          </elementProp>
+          <elementProp name="ERROR_RATE_THRESHOLD" elementType="Argument">
+            <stringProp name="Argument.name">ERROR_RATE_THRESHOLD</stringProp>
+            <stringProp name="Argument.value">${__P(ERROR_RATE_THRESHOLD,5)}</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code 200 OK">
+        <collectionProp name="Asserion.test_strings">
+          <stringProp name="49586">200</stringProp>
+        </collectionProp>
+        <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+        <intProp name="Assertion.test_type">8</intProp>
+        <boolProp name="Assertion.assume_success">false</boolProp>
+      </ResponseAssertion>
+      <hashTree/>
+      <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code 201 Created">
+        <collectionProp name="Asserion.test_strings">
+          <stringProp name="130017">201</stringProp>
+        </collectionProp>
+        <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+        <intProp name="Assertion.test_type">8</intProp>
+        <boolProp name="Assertion.assume_success">false</boolProp>
+      </ResponseAssertion>
+      <hashTree/>
+      <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Code 204 No Content">
+        <collectionProp name="Asserion.test_strings">
+          <stringProp name="49588">204</stringProp>
+        </collectionProp>
+        <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+        <intProp name="Assertion.test_type">8</intProp>
+        <boolProp name="Assertion.assume_success">false</boolProp>
+      </ResponseAssertion>
+      <hashTree/>
+      <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="Data Field Exists">
+        <stringProp name="JSON_PATH">$.data</stringProp>
+        <stringProp name="EXPECTED_VALUE"></stringProp>
+        <boolProp name="JSONVALIDATION">false</boolProp>
+        <boolProp name="EXPECT_NULL">false</boolProp>
+        <boolProp name="INVERT">false</boolProp>
+        <boolProp name="ISREGEX">false</boolProp>
+      </JSONPathAssertion>
+      <hashTree/>
+      <JSONPathAssertion guiclass="JSONPathAssertionGui" testclass="JSONPathAssertion" testname="ID Field Exists">
+        <stringProp name="JSON_PATH">$.id</stringProp>
+        <stringProp name="EXPECTED_VALUE"></stringProp>
+        <boolProp name="JSONVALIDATION">false</boolProp>
+        <boolProp name="EXPECT_NULL">false</boolProp>
+        <boolProp name="INVERT">false</boolProp>
+        <boolProp name="ISREGEX">false</boolProp>
+      </JSONPathAssertion>
+      <hashTree/>
+      <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Response Time Under 2s">
+        <stringProp name="DurationAssertion.duration">2000</stringProp>
+      </DurationAssertion>
+      <hashTree/>
+      <SizeAssertion guiclass="SizeAssertionGui" testclass="SizeAssertion" testname="Response Has Content">
+        <stringProp name="SizeAssertion.size">0</stringProp>
+        <intProp name="SizeAssertion.operator">2</intProp>
+      </SizeAssertion>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

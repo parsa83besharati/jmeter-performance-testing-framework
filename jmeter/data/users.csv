@@ -1,0 +1,11 @@
+userId,userName,job,email,password
+1,George,Developer,george.bluth@reqres.in,cityslicka
+2,Janet,QA Engineer,janet.weaver@reqres.in,pistol
+3,Emma,Product Manager,emma.wong@reqres.in,test123
+4,Eve,Designer,eve.holt@reqres.in,password
+5,Charles,DevOps,charles.morris@reqres.in,secret
+6,Tracey,Architect,tracey.ramos@reqres.in,admin123
+7,Michael,Manager,michael.lawson@reqres.in,manager
+8,Lindsay,Analyst,lindsay.ferguson@reqres.in,analyst
+9,Tobias,CTO,tobias.funke@reqres.in,cto2024
+10,Byron,CEO,byron.fields@reqres.in,ceo2024

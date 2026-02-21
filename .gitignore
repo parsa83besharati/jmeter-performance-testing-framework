@@ -1,5 +1,11 @@
-jmeter/results/*
-*.jtl
+jmeter/results/jtl/*.jtl
+jmeter/results/jtl/*.log
+jmeter/results/html/*
+!jmeter/results/html/.gitkeep
+!jmeter/results/jtl/.gitkeep
 *.log
-*.csv
-*.html
+*.jtl~
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
