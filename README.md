@@ -7,29 +7,29 @@ A comprehensive performance testing framework built with Apache JMeter following
 ```
 Performance-Test-Project/
 ├── jmeter/
-│   ├── config/                 # Configuration files
-│   │   ├── user.properties     # JMeter user settings
-│   │   ├── system.properties   # System-level settings
-│   │   └── test-config.properties # Test-specific configurations
-│   ├── data/                   # Test data files
-│   │   ├── users.csv           # User test data
-│   │   └── pagination.csv      # Pagination test data
-│   ├── fragments/              # Reusable test fragments
+│   ├── config/                     # Configuration files
+│   │   ├── user.properties         # JMeter user settings
+│   │   ├── system.properties       # System-level settings
+│   │   └── test-config.properties  # Test-specific configurations
+│   ├── data/                       # Test data files
+│   │   ├── users.csv               # User test data
+│   │   └── pagination.csv          # Pagination test data
+│   ├── fragments/                  # Reusable test fragments
 │   │   ├── reqres-api-fragment.jmx
 │   │   └── assertions-fragment.jmx
-│   ├── test-plans/             # Main test plans
-│   │   ├── smoke-test.jmx      # Quick validation
-│   │   ├── load-test.jmx       # Normal load simulation
-│   │   ├── stress-test.jmx     # Beyond normal load
-│   │   ├── spike-test.jmx      # Sudden surge testing
-│   │   └── first-test.jmx      # Original test plan
-│   └── results/                # Test results
-│       ├── jtl/                # Raw results (JTL files)
-│       └── html/               # HTML reports
-└── scripts/                    # Execution scripts
-    ├── run-test.bat/.sh        # Main test runner
-    ├── generate-report.bat/.sh # Report generator
-    └── validate-tests.bat/.sh  # Test validator
+│   ├── test-plans/                 # Main test plans
+│   │   ├── smoke-test.jmx          # Quick validation
+│   │   ├── load-test.jmx           # Normal load simulation
+│   │   ├── stress-test.jmx         # Beyond normal load
+│   │   ├── spike-test.jmx          # Sudden surge testing
+│   │   └── first-test.jmx          # Original test plan
+│   └── results/                    # Test results
+│       ├── jtl/                    # Raw results (JTL files)
+│       └── html/                   # HTML reports
+└── scripts/                        # Execution scripts
+    ├── run-test.bat/.sh            # Main test runner
+    ├── generate-report.bat/.sh     # Report generator
+    └── validate-tests.bat/.sh      # Test validator
 ```
 
 ## Prerequisites
