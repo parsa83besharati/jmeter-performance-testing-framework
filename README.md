@@ -94,7 +94,6 @@ jmeter-performance-testing-framework/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── LICENSE
-├── CONTRIBUTING.md
 └── README.md
 ```
 
@@ -316,20 +315,6 @@ pipeline {
 3. Configure thread groups and loop controllers
 4. Add a `ResultCollector` for JTL output
 5. Update `run-test.sh/bat` to support the new test type
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run smoke test: `./scripts/run-test.sh smoke`
-5. Submit a pull request
 
 ---
 
