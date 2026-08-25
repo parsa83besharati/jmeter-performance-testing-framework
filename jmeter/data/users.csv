@@ -9,3 +9,13 @@ userId,userName,job,email,password
 8,Lindsay,Analyst,lindsay.ferguson@reqres.in,analyst
 9,Tobias,CTO,tobias.funke@reqres.in,cto2024
 10,Byron,CEO,byron.fields@reqres.in,ceo2024
+11,Sean,Backend Developer,sean.howell@reqres.in,dev2024
+12,Sarah,Frontend Developer,sarah.anderson@reqres.in,frontend
+13,David,Security Engineer,david.kim@reqres.in,secure123
+14,Lisa,Data Scientist,lisa.chen@reqres.in,data2024
+15,James,SRE,james.wilson@reqres.in,sre2024
+16,Amanda,Scrum Master,amanda.taylor@reqres.in,agile2024
+17,Ryan,Cloud Engineer,ryan.martin@reqres.in,cloud2024
+18,Jennifer,QA Lead,jennifer.lee@reqres.in,quality
+19,Chris,Platform Engineer,chris.garcia@reqres.in,platform
+20,Nicole,Release Manager,nicole.moore@reqres.in,release

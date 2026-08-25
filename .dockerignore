@@ -1,0 +1,11 @@
+jmeter/results/
+*.log
+*.jtl
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+.git/
+.gitignore
+README.md
+scripts/

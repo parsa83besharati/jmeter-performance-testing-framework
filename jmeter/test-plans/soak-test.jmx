@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Load Test">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Soak Test">
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
         <collectionProp name="Arguments.arguments">
           <elementProp name="BASE_URL" elementType="Argument">
@@ -22,7 +22,7 @@
           </elementProp>
         </collectionProp>
       </elementProp>
-      <stringProp name="TestPlan.comments">Load Test - Normal expected load simulation</stringProp>
+      <stringProp name="TestPlan.comments">Soak Test - Sustained load over extended period to detect memory leaks and degradation</stringProp>
     </TestPlan>
     <hashTree>
       <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Load Users Data">
@@ -64,13 +64,13 @@
         </IncludeController>
         <hashTree/>
       </hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Load Test - ReqRes API">
-        <intProp name="ThreadGroup.num_threads">${__P(LOAD_USERS,50)}</intProp>
-        <intProp name="ThreadGroup.ramp_time">${__P(LOAD_RAMPUP,60)}</intProp>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Soak Test - Sustained Load">
+        <intProp name="ThreadGroup.num_threads">${__P(SOAK_USERS,20)}</intProp>
+        <intProp name="ThreadGroup.ramp_time">${__P(SOAK_RAMPUP,30)}</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
-          <stringProp name="LoopController.loops">${__P(LOAD_ITERATIONS,10)}</stringProp>
+          <stringProp name="LoopController.loops">-1</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
       </ThreadGroup>
@@ -79,6 +79,27 @@
           <stringProp name="IncludeController.filename">../fragments/reqres-api-samplers.jmx</stringProp>
         </IncludeController>
         <hashTree/>
+        <TestAction guiclass="TestActionGui" testclass="TestAction" testname="Loop Duration Check">
+          <intProp name="Action.action_type">1</intProp>
+          <stringProp name="Action.name">Continue</stringProp>
+        </TestAction>
+        <hashTree/>
+        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="Stop After Duration">
+          <stringProp name="IfController.condition">${__groovy(System.currentTimeMillis() - vars.get("startTime").toLong() &gt; (${__P(SOAK_DURATION,3600)} * 1000))}</stringProp>
+          <boolProp name="IfController.evaluateAll">false</boolProp>
+          <boolProp name="IfController.ignoreSubController">false</boolProp>
+        </IfController>
+        <hashTree>
+          <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Stop Current Thread">
+            <stringProp name="cacheKey">true</stringProp>
+            <stringProp name="filename"></stringProp>
+            <stringProp name="parameters"></stringProp>
+            <stringProp name="script">import org.apache.jmeter.threads.JMeterContextService;
+JMeterContextService.getContext().getThread().stop();</stringProp>
+            <stringProp name="scriptLanguage">groovy</stringProp>
+          </JSR223Sampler>
+          <hashTree/>
+        </hashTree>
       </hashTree>
       <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
@@ -100,7 +121,7 @@
             <url>true</url>
           </value>
         </objProp>
-        <stringProp name="filename">../results/jtl/load-test-results.jtl</stringProp>
+        <stringProp name="filename">../results/jtl/soak-test-results.jtl</stringProp>
       </ResultCollector>
       <hashTree/>
     </hashTree>

@@ -1,0 +1,190 @@
+name: Framework Validation
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  validate-structure:
+    name: Validate Framework
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JMX XML Syntax
+        run: |
+          echo "=== Validating JMX XML Files ==="
+          ERRORS=0
+          for f in jmeter/test-plans/*.jmx jmeter/fragments/*.jmx; do
+            if python3 -c "import xml.etree.ElementTree as ET; ET.parse('$f')" 2>/dev/null; then
+              echo "  [PASS] $f"
+            else
+              echo "  [FAIL] $f"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "ERROR: $ERRORS JMX files have invalid XML"
+            exit 1
+          fi
+          echo "All JMX files are valid XML"
+
+      - name: Validate Test Plans Have Required Elements
+        run: |
+          echo "=== Validating Test Plan Structure ==="
+          ERRORS=0
+          for f in jmeter/test-plans/*.jmx; do
+            NAME=$(basename "$f")
+            # Check for TestPlan element
+            if grep -q 'testclass="TestPlan"' "$f"; then
+              echo "  [PASS] $NAME has TestPlan element"
+            else
+              echo "  [FAIL] $NAME missing TestPlan element"
+              ERRORS=$((ERRORS + 1))
+            fi
+            # Check for IncludeController
+            if grep -q 'IncludeController' "$f"; then
+              echo "  [PASS] $NAME uses IncludeController (modular)"
+            else
+              echo "  [WARN] $NAME does not use IncludeController"
+            fi
+            # Check for ResultCollector
+            if grep -q 'ResultCollector' "$f"; then
+              echo "  [PASS] $NAME has ResultCollector"
+            else
+              echo "  [FAIL] $NAME missing ResultCollector"
+              ERRORS=$((ERRORS + 1))
+            fi
+            # Check for CSV data sets
+            if grep -q 'CSVDataSet' "$f"; then
+              echo "  [PASS] $NAME has CSV parameterization"
+            else
+              echo "  [WARN] $NAME has no CSV data sets"
+            fi
+          done
+          if [ $ERRORS -gt 0 ]; then
+            echo "ERROR: $ERRORS validation failures"
+            exit 1
+          fi
+
+      - name: Validate Fragments Exist
+        run: |
+          echo "=== Validating Fragment Files ==="
+          if [ -f "jmeter/fragments/reqres-api-samplers.jmx" ]; then
+            echo "  [PASS] reqres-api-samplers.jmx exists"
+          else
+            echo "  [FAIL] reqres-api-samplers.jmx missing"
+            exit 1
+          fi
+          if [ -f "jmeter/fragments/health-check.jmx" ]; then
+            echo "  [PASS] health-check.jmx exists"
+          else
+            echo "  [FAIL] health-check.jmx missing"
+            exit 1
+          fi
+
+      - name: Validate Scripts Are Executable
+        run: |
+          echo "=== Validating Scripts ==="
+          for f in scripts/*.sh; do
+            if [ -x "$f" ]; then
+              echo "  [PASS] $f is executable"
+            else
+              echo "  [FIX] Setting executable: $f"
+              chmod +x "$f"
+            fi
+          done
+
+      - name: Validate Configuration Files
+        run: |
+          echo "=== Validating Configuration ==="
+          if [ -f "jmeter/config/test-config.properties" ]; then
+            echo "  [PASS] test-config.properties exists"
+            # Check required properties exist
+            for PROP in BASE_URL API_KEY LOAD_USERS P95_THRESHOLD P99_THRESHOLD ERROR_RATE_THRESHOLD; do
+              if grep -q "^${PROP}=" jmeter/config/test-config.properties; then
+                echo "  [PASS] Property $PROP defined"
+              else
+                echo "  [FAIL] Property $PROP missing"
+                exit 1
+              fi
+            done
+          else
+            echo "  [FAIL] test-config.properties missing"
+            exit 1
+          fi
+
+      - name: Validate Test Data
+        run: |
+          echo "=== Validating Test Data ==="
+          if [ -f "jmeter/data/users.csv" ]; then
+            LINES=$(wc -l < jmeter/data/users.csv)
+            echo "  [PASS] users.csv has $LINES lines (including header)"
+            if [ "$LINES" -gt 5 ]; then
+              echo "  [PASS] Sufficient test data records"
+            else
+              echo "  [WARN] Low test data count"
+            fi
+          else
+            echo "  [FAIL] users.csv missing"
+            exit 1
+          fi
+          if [ -f "jmeter/data/pagination.csv" ]; then
+            echo "  [PASS] pagination.csv exists"
+          else
+            echo "  [FAIL] pagination.csv missing"
+            exit 1
+          fi
+
+      - name: Validate Project Structure
+        run: |
+          echo "=== Validating Project Structure ==="
+          REQUIRED_DIRS=("jmeter/config" "jmeter/data" "jmeter/fragments" "jmeter/test-plans" "jmeter/results/jtl" "jmeter/results/html" "scripts")
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              echo "  [PASS] $dir exists"
+            else
+              echo "  [FAIL] $dir missing"
+              exit 1
+            fi
+          done
+
+      - name: Validate LICENSE and README
+        run: |
+          echo "=== Validating Documentation ==="
+          if [ -f "LICENSE" ]; then
+            echo "  [PASS] LICENSE exists"
+          else
+            echo "  [FAIL] LICENSE missing"
+            exit 1
+          fi
+          if [ -f "README.md" ]; then
+            LINES=$(wc -l < README.md)
+            echo "  [PASS] README.md exists ($LINES lines)"
+          else
+            echo "  [FAIL] README.md missing"
+            exit 1
+          fi
+          if [ -f "CONTRIBUTING.md" ]; then
+            echo "  [PASS] CONTRIBUTING.md exists"
+          else
+            echo "  [WARN] CONTRIBUTING.md missing"
+          fi
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "========================================"
+          echo "  Framework Validation Complete"
+          echo "========================================"
+          echo ""
+          echo "  JMX Files:    $(find jmeter -name '*.jmx' | wc -l)"
+          echo "  Test Plans:   $(find jmeter/test-plans -name '*.jmx' | wc -l)"
+          echo "  Fragments:    $(find jmeter/fragments -name '*.jmx' | wc -l)"
+          echo "  Scripts:      $(find scripts -name '*.sh' -o -name '*.bat' | wc -l)"
+          echo "  Config Files: $(find jmeter/config -name '*.properties' | wc -l)"
+          echo ""
+          echo "  All checks passed!"

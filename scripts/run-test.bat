@@ -26,6 +26,7 @@ if "%TEST_PLAN%"=="" (
     echo   load    - Load test (normal expected load)
     echo   stress  - Stress test (beyond normal load)
     echo   spike   - Spike test (sudden surge)
+    echo   soak    - Soak test (sustained load over time)
     echo   all     - Run all tests sequentially
     echo.
     echo Example:
@@ -51,6 +52,7 @@ if "%TEST_PLAN%"=="all" (
     call :run_test load
     call :run_test stress
     call :run_test spike
+    call :run_test soak
 ) else (
     call :run_test %TEST_PLAN%
 )
@@ -73,8 +75,19 @@ echo Results will be saved to: %JTL_FILE%
 
 "%JMETER_BIN%\jmeter.bat" -n -t test-plans\%TEST_TYPE%-test.jmx -l %JTL_FILE% -q %PROPERTIES_FILE% -p config\user.properties -j results\jtl\%TEST_TYPE%-test-%TIMESTAMP%.log
 
+echo.
+echo Validating results...
+call "%SCRIPT_DIR%validate-results.bat" "%PROJECT_DIR%\jmeter\%JTL_FILE%"
+set VALIDATE_RESULT=!errorlevel!
+
+echo.
 echo Generating HTML report...
 "%JMETER_BIN%\jmeter.bat" --generate-html %HTML_DIR% --input-jtl %JTL_FILE%
 
 echo %TEST_TYPE% test completed. HTML report: %HTML_DIR%
+
+if !VALIDATE_RESULT! neq 0 (
+    echo WARNING: %TEST_TYPE% test failed threshold validation!
+)
+
 exit /b 0

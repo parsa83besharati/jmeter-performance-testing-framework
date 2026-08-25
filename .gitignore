@@ -9,3 +9,4 @@ jmeter/results/html/*
 *.iml
 .DS_Store
 Thumbs.db
+target/

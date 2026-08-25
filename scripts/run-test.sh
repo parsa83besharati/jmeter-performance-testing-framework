@@ -25,6 +25,7 @@ if [ -z "$TEST_PLAN" ]; then
     echo "  load    - Load test (normal expected load)"
     echo "  stress  - Stress test (beyond normal load)"
     echo "  spike   - Spike test (sudden surge)"
+    echo "  soak    - Soak test (sustained load over time)"
     echo "  all     - Run all tests sequentially"
     echo
     echo "Example:"
@@ -55,21 +56,36 @@ run_test() {
         -p "config/user.properties" \
         -j "results/jtl/${test_type}-test-${TIMESTAMP}.log"
     
+    echo
+    echo "Validating results..."
+    "$SCRIPT_DIR/validate-results.sh" "$PROJECT_DIR/jmeter/$jtl_file"
+    local validate_result=$?
+    
+    echo
     echo "Generating HTML report..."
     "$JMETER_BIN/jmeter" --generate-html "$html_dir" --input-jtl "$jtl_file"
     
     echo "$test_type test completed. HTML report: $html_dir"
+    
+    if [ $validate_result -ne 0 ]; then
+        echo "WARNING: $test_type test failed threshold validation!"
+    fi
+    
+    return $validate_result
 }
+
+OVERALL_RESULT=0
 
 case "$TEST_PLAN" in
     all)
-        run_test "smoke"
-        run_test "load"
-        run_test "stress"
-        run_test "spike"
+        run_test "smoke" || OVERALL_RESULT=1
+        run_test "load" || OVERALL_RESULT=1
+        run_test "stress" || OVERALL_RESULT=1
+        run_test "spike" || OVERALL_RESULT=1
+        run_test "soak" || OVERALL_RESULT=1
         ;;
-    smoke|load|stress|spike)
-        run_test "$TEST_PLAN"
+    smoke|load|stress|spike|soak)
+        run_test "$TEST_PLAN" || OVERALL_RESULT=1
         ;;
     *)
         echo "Unknown test plan: $TEST_PLAN"
@@ -82,3 +98,4 @@ echo "========================================"
 echo "  Test Execution Completed"
 echo "========================================"
 echo "Results saved to: $PROJECT_DIR/jmeter/results"
+exit $OVERALL_RESULT

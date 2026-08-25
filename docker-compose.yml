@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  jmeter:
+    build: .
+    container_name: jmeter-runner
+    environment:
+      - BASE_URL=${BASE_URL:-https://reqres.in}
+      - API_KEY=${API_KEY:-reqres-free-v1}
+      - LOAD_USERS=${LOAD_USERS:-50}
+      - LOAD_RAMPUP=${LOAD_RAMPUP:-60}
+      - SOAK_USERS=${SOAK_USERS:-20}
+      - SOAK_DURATION=${SOAK_DURATION:-3600}
+    volumes:
+      - ./jmeter/results:/jmeter/jmeter/results
+      - ./jmeter/config:/jmeter/jmeter/config
+    networks:
+      - jmeter-network
+
+  jmeter-master:
+    build: .
+    container_name: jmeter-master
+    environment:
+      - BASE_URL=${BASE_URL:-https://reqres.in}
+      - API_KEY=${API_KEY:-reqres-free-v1}
+    volumes:
+      - ./jmeter/results:/jmeter/jmeter/results
+    depends_on:
+      - jmeter-slave-1
+      - jmeter-slave-2
+    networks:
+      - jmeter-network
+    command: >
+      /opt/apache-jmeter/bin/jmeter -n
+      -t /jmeter/jmeter/test-plans/load-test.jmx
+      -R jmeter-slave-1,jmeter-slave-2
+      -l /jmeter/jmeter/results/jtl/distributed-test.jtl
+
+  jmeter-slave-1:
+    build: .
+    container_name: jmeter-slave-1
+    environment:
+      - SERVER_PORT=1099
+    networks:
+      - jmeter-network
+    command: >
+      /opt/apache-jmeter/bin/jmeter-server
+      -Dserver.rmi.localport=4000
+      -Dserver_port=1099
+
+  jmeter-slave-2:
+    build: .
+    container_name: jmeter-slave-2
+    environment:
+      - SERVER_PORT=1099
+    networks:
+      - jmeter-network
+    command: >
+      /opt/apache-jmeter/bin/jmeter-server
+      -Dserver.rmi.localport=4001
+      -Dserver_port=1099
+
+networks:
+  jmeter-network:
+    driver: bridge
