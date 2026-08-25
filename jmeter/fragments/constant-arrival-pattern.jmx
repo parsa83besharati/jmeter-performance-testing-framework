@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hashTree>
+  <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Constant Arrival Rate Pattern">
+    <intProp name="ThreadGroup.num_threads">${__P(THREADS,10)}</intProp>
+    <intProp name="ThreadGroup.ramp_time">0</intProp>
+    <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+    <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+    <elementProp name="ThreadGroup.main_controller" elementType="ThroughputController" guiclass="ThroughputControlPanel" testclass="ThroughputController" testname="Throughput Controller">
+      <intProp name="ThroughputController.style">1</intProp>
+      <stringProp name="ThroughputController.maxThroughput">${__P(TARGET_RPS,50)}</stringProp>
+      <stringProp name="ThroughputController.perThread">true</stringProp>
+      <boolProp name="ThroughputController.executePerThread">true</boolProp>
+    </elementProp>
+  </ThreadGroup>
+  <hashTree>
+    <ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Inter-arrival Time">
+      <stringProp name="ConstantTimer.delay">${__P(INTER_ARRIVAL_MS,20)}</stringProp>
+    </ConstantTimer>
+    <hashTree/>
+  </hashTree>
+</hashTree>

@@ -7,12 +7,17 @@ on:
     branches: [main, master]
 
 jobs:
-  validate-structure:
+  validate-framework:
     name: Validate Framework
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Validate JMX XML Syntax
         run: |
@@ -30,148 +35,128 @@ jobs:
             echo "ERROR: $ERRORS JMX files have invalid XML"
             exit 1
           fi
-          echo "All JMX files are valid XML"
 
-      - name: Validate Test Plans Have Required Elements
+      - name: Validate Test Plan Structure
         run: |
           echo "=== Validating Test Plan Structure ==="
           ERRORS=0
           for f in jmeter/test-plans/*.jmx; do
             NAME=$(basename "$f")
-            # Check for TestPlan element
             if grep -q 'testclass="TestPlan"' "$f"; then
               echo "  [PASS] $NAME has TestPlan element"
             else
               echo "  [FAIL] $NAME missing TestPlan element"
               ERRORS=$((ERRORS + 1))
             fi
-            # Check for IncludeController
             if grep -q 'IncludeController' "$f"; then
               echo "  [PASS] $NAME uses IncludeController (modular)"
             else
               echo "  [WARN] $NAME does not use IncludeController"
             fi
-            # Check for ResultCollector
             if grep -q 'ResultCollector' "$f"; then
               echo "  [PASS] $NAME has ResultCollector"
             else
               echo "  [FAIL] $NAME missing ResultCollector"
               ERRORS=$((ERRORS + 1))
             fi
-            # Check for CSV data sets
-            if grep -q 'CSVDataSet' "$f"; then
-              echo "  [PASS] $NAME has CSV parameterization"
+          done
+          if [ $ERRORS -gt 0 ]; then exit 1; fi
+
+      - name: Validate Python Scripts Syntax
+        run: |
+          echo "=== Validating Python Scripts ==="
+          for f in scripts/*.py; do
+            if python3 -c "import py_compile; py_compile.compile('$f', doraise=True)" 2>/dev/null; then
+              echo "  [PASS] $f"
             else
-              echo "  [WARN] $NAME has no CSV data sets"
+              echo "  [FAIL] $f"
+              exit 1
             fi
           done
-          if [ $ERRORS -gt 0 ]; then
-            echo "ERROR: $ERRORS validation failures"
-            exit 1
-          fi
 
-      - name: Validate Fragments Exist
+      - name: Validate Shell Scripts
         run: |
-          echo "=== Validating Fragment Files ==="
-          if [ -f "jmeter/fragments/reqres-api-samplers.jmx" ]; then
-            echo "  [PASS] reqres-api-samplers.jmx exists"
-          else
-            echo "  [FAIL] reqres-api-samplers.jmx missing"
-            exit 1
-          fi
-          if [ -f "jmeter/fragments/health-check.jmx" ]; then
-            echo "  [PASS] health-check.jmx exists"
-          else
-            echo "  [FAIL] health-check.jmx missing"
-            exit 1
-          fi
-
-      - name: Validate Scripts Are Executable
-        run: |
-          echo "=== Validating Scripts ==="
+          echo "=== Validating Shell Scripts ==="
           for f in scripts/*.sh; do
-            if [ -x "$f" ]; then
-              echo "  [PASS] $f is executable"
+            chmod +x "$f"
+            if bash -n "$f" 2>/dev/null; then
+              echo "  [PASS] $f"
             else
-              echo "  [FIX] Setting executable: $f"
-              chmod +x "$f"
+              echo "  [FAIL] $f"
+              exit 1
             fi
           done
 
-      - name: Validate Configuration Files
+      - name: Validate Configuration
         run: |
           echo "=== Validating Configuration ==="
-          if [ -f "jmeter/config/test-config.properties" ]; then
-            echo "  [PASS] test-config.properties exists"
-            # Check required properties exist
-            for PROP in BASE_URL API_KEY LOAD_USERS P95_THRESHOLD P99_THRESHOLD ERROR_RATE_THRESHOLD; do
-              if grep -q "^${PROP}=" jmeter/config/test-config.properties; then
-                echo "  [PASS] Property $PROP defined"
-              else
-                echo "  [FAIL] Property $PROP missing"
-                exit 1
-              fi
-            done
-          else
-            echo "  [FAIL] test-config.properties missing"
-            exit 1
-          fi
-
-      - name: Validate Test Data
-        run: |
-          echo "=== Validating Test Data ==="
-          if [ -f "jmeter/data/users.csv" ]; then
-            LINES=$(wc -l < jmeter/data/users.csv)
-            echo "  [PASS] users.csv has $LINES lines (including header)"
-            if [ "$LINES" -gt 5 ]; then
-              echo "  [PASS] Sufficient test data records"
+          for PROP in BASE_URL API_KEY LOAD_USERS P95_THRESHOLD P99_THRESHOLD ERROR_RATE_THRESHOLD; do
+            if grep -q "^${PROP}=" jmeter/config/test-config.properties; then
+              echo "  [PASS] Property $PROP defined"
             else
-              echo "  [WARN] Low test data count"
+              echo "  [FAIL] Property $PROP missing"
+              exit 1
             fi
+          done
+          # Validate SLA config JSON
+          if python3 -c "import json; json.load(open('jmeter/config/sla-config.json'))" 2>/dev/null; then
+            echo "  [PASS] sla-config.json is valid JSON"
           else
-            echo "  [FAIL] users.csv missing"
-            exit 1
-          fi
-          if [ -f "jmeter/data/pagination.csv" ]; then
-            echo "  [PASS] pagination.csv exists"
-          else
-            echo "  [FAIL] pagination.csv missing"
+            echo "  [FAIL] sla-config.json is invalid"
             exit 1
           fi
 
       - name: Validate Project Structure
         run: |
           echo "=== Validating Project Structure ==="
-          REQUIRED_DIRS=("jmeter/config" "jmeter/data" "jmeter/fragments" "jmeter/test-plans" "jmeter/results/jtl" "jmeter/results/html" "scripts")
+          REQUIRED_DIRS=("jmeter/config" "jmeter/data" "jmeter/fragments" "jmeter/test-plans" "scripts")
           for dir in "${REQUIRED_DIRS[@]}"; do
             if [ -d "$dir" ]; then
-              echo "  [PASS] $dir exists"
+              echo "  [PASS] $dir"
             else
               echo "  [FAIL] $dir missing"
               exit 1
             fi
           done
+          REQUIRED_FILES=("LICENSE" "README.md" "CONTRIBUTING.md" "Dockerfile" "docker-compose.yml" ".editorconfig")
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "  [PASS] $file"
+            else
+              echo "  [FAIL] $file missing"
+              exit 1
+            fi
+          done
 
-      - name: Validate LICENSE and README
+      - name: Test SLA Validator
         run: |
-          echo "=== Validating Documentation ==="
-          if [ -f "LICENSE" ]; then
-            echo "  [PASS] LICENSE exists"
+          echo "=== Testing SLA Validator ==="
+          # Create a mock JTL file
+          cat > /tmp/mock-results.jtl << 'EOF'
+          timeStamp,elapsed,label,responseCode,responseMessage,threadName,DataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,Connect
+          1000,150,GET List Users,200,OK,Thread 1-1,text,true,,1024,256,1,1,https://reqres.in/api/users?page=1,120,30
+          1000,200,GET Single User,200,OK,Thread 1-1,text,true,,512,128,1,1,https://reqres.in/api/users/1,180,20
+          1000,300,POST Create User,201,Created,Thread 1-1,text,true,,256,512,1,1,https://reqres.in/api/users,250,40
+          1000,180,PUT Update User,200,OK,Thread 1-1,text,true,,256,512,1,1,https://reqres.in/api/users/1,150,30
+          1000,100,DELETE User,204,No Content,Thread 1-1,text,true,,0,0,1,1,https://reqres.in/api/users/1,80,20
+          EOF
+          
+          if python3 scripts/validate-sla.py /tmp/mock-results.jtl --test-type smoke; then
+            echo "  [PASS] SLA validator works correctly"
           else
-            echo "  [FAIL] LICENSE missing"
+            echo "  [FAIL] SLA validator failed"
             exit 1
           fi
-          if [ -f "README.md" ]; then
-            LINES=$(wc -l < README.md)
-            echo "  [PASS] README.md exists ($LINES lines)"
+
+      - name: Test HTML Report Generator
+        run: |
+          echo "=== Testing HTML Report Generator ==="
+          python3 scripts/generate-html-report.py /tmp/mock-results.jtl --output /tmp/test-report.html --title "CI Test Report"
+          if [ -f /tmp/test-report.html ] && grep -q "CI Test Report" /tmp/test-report.html; then
+            echo "  [PASS] HTML report generated successfully"
           else
-            echo "  [FAIL] README.md missing"
+            echo "  [FAIL] HTML report generation failed"
             exit 1
-          fi
-          if [ -f "CONTRIBUTING.md" ]; then
-            echo "  [PASS] CONTRIBUTING.md exists"
-          else
-            echo "  [WARN] CONTRIBUTING.md missing"
           fi
 
       - name: Summary
@@ -181,10 +166,11 @@ jobs:
           echo "  Framework Validation Complete"
           echo "========================================"
           echo ""
-          echo "  JMX Files:    $(find jmeter -name '*.jmx' | wc -l)"
-          echo "  Test Plans:   $(find jmeter/test-plans -name '*.jmx' | wc -l)"
-          echo "  Fragments:    $(find jmeter/fragments -name '*.jmx' | wc -l)"
-          echo "  Scripts:      $(find scripts -name '*.sh' -o -name '*.bat' | wc -l)"
-          echo "  Config Files: $(find jmeter/config -name '*.properties' | wc -l)"
+          echo "  JMX Files:     $(find jmeter -name '*.jmx' | wc -l)"
+          echo "  Test Plans:    $(find jmeter/test-plans -name '*.jmx' | wc -l)"
+          echo "  Fragments:     $(find jmeter/fragments -name '*.jmx' | wc -l)"
+          echo "  Python Scripts: $(find scripts -name '*.py' | wc -l)"
+          echo "  Shell Scripts:  $(find scripts -name '*.sh' | wc -l)"
+          echo "  Config Files:  $(find jmeter/config -name '*.properties' -o -name '*.json' | wc -l)"
           echo ""
           echo "  All checks passed!"

@@ -56,22 +56,47 @@ run_test() {
         -p "config/user.properties" \
         -j "results/jtl/${test_type}-test-${TIMESTAMP}.log"
     
+    local test_exit=$?
+    
     echo
-    echo "Validating results..."
-    "$SCRIPT_DIR/validate-results.sh" "$PROJECT_DIR/jmeter/$jtl_file"
-    local validate_result=$?
+    echo "Running SLA validation..."
+    python3 "$SCRIPT_DIR/validate-sla.py" "$PROJECT_DIR/jmeter/$jtl_file" \
+        --test-type "$test_type" \
+        --json-output "$PROJECT_DIR/jmeter/results/jtl/${test_type}-sla-${TIMESTAMP}.json"
+    local sla_result=$?
     
     echo
     echo "Generating HTML report..."
-    "$JMETER_BIN/jmeter" --generate-html "$html_dir" --input-jtl "$jtl_file"
+    python3 "$SCRIPT_DIR/generate-html-report.py" "$PROJECT_DIR/jmeter/$jtl_file" \
+        --output "$PROJECT_DIR/jmeter/results/html/${test_type}-report-${TIMESTAMP}.html" \
+        --title "${test_type^} Test Report - $(date +'%Y-%m-%d %H:%M')"
     
-    echo "$test_type test completed. HTML report: $html_dir"
+    echo
+    echo "Recording run history..."
+    python3 "$SCRIPT_DIR/track-history.py" record "$PROJECT_DIR/jmeter/$jtl_file" \
+        --test-type "$test_type" \
+        --env "${ENV:-development}" 2>/dev/null || true
     
-    if [ $validate_result -ne 0 ]; then
-        echo "WARNING: $test_type test failed threshold validation!"
+    if [ -n "$NOTIFY_WEBHOOK" ] || [ -n "$SLACK_WEBHOOK_URL" ] || [ -n "$TEAMS_WEBHOOK_URL" ]; then
+        echo
+        echo "Sending notification..."
+        "$SCRIPT_DIR/notify-webhook.sh" "$PROJECT_DIR/jmeter/$jtl_file" "$test_type" 2>/dev/null || true
     fi
     
-    return $validate_result
+    echo "$test_type test completed."
+    echo "  JTL:      $jtl_file"
+    echo "  HTML:     $PROJECT_DIR/jmeter/results/html/${test_type}-report-${TIMESTAMP}.html"
+    echo "  SLA JSON: $PROJECT_DIR/jmeter/results/jtl/${test_type}-sla-${TIMESTAMP}.json"
+    
+    if [ $test_exit -ne 0 ]; then
+        echo "  WARNING: JMeter exited with errors"
+    fi
+    
+    if [ $sla_result -ne 0 ]; then
+        echo "  WARNING: SLA validation failed!"
+    fi
+    
+    return $sla_result
 }
 
 OVERALL_RESULT=0

@@ -1,0 +1,69 @@
+{
+  "version": "1.0",
+  "description": "Performance SLA thresholds per endpoint",
+  "global": {
+    "max_error_rate_percent": 5,
+    "max_p95_response_ms": 1000,
+    "max_p99_response_ms": 2000,
+    "min_throughput_rps": 10
+  },
+  "endpoints": {
+    "GET /api/users": {
+      "max_avg_response_ms": 500,
+      "max_p95_response_ms": 800,
+      "max_p99_response_ms": 1500,
+      "max_error_rate_percent": 2,
+      "min_throughput_rps": 20
+    },
+    "GET /api/users/{id}": {
+      "max_avg_response_ms": 300,
+      "max_p95_response_ms": 500,
+      "max_p99_response_ms": 1000,
+      "max_error_rate_percent": 2,
+      "min_throughput_rps": 30
+    },
+    "POST /api/users": {
+      "max_avg_response_ms": 600,
+      "max_p95_response_ms": 1000,
+      "max_p99_response_ms": 2000,
+      "max_error_rate_percent": 3,
+      "min_throughput_rps": 15
+    },
+    "PUT /api/users/{id}": {
+      "max_avg_response_ms": 600,
+      "max_p95_response_ms": 1000,
+      "max_p99_response_ms": 2000,
+      "max_error_rate_percent": 3,
+      "min_throughput_rps": 15
+    },
+    "DELETE /api/users/{id}": {
+      "max_avg_response_ms": 400,
+      "max_p95_response_ms": 800,
+      "max_p99_response_ms": 1500,
+      "max_error_rate_percent": 3,
+      "min_throughput_rps": 20
+    }
+  },
+  "test_types": {
+    "smoke": {
+      "max_p95_response_ms": 2000,
+      "max_error_rate_percent": 0
+    },
+    "load": {
+      "max_p95_response_ms": 1000,
+      "max_error_rate_percent": 5
+    },
+    "stress": {
+      "max_p95_response_ms": 3000,
+      "max_error_rate_percent": 10
+    },
+    "spike": {
+      "max_p95_response_ms": 5000,
+      "max_error_rate_percent": 15
+    },
+    "soak": {
+      "max_p95_response_ms": 1000,
+      "max_error_rate_percent": 2
+    }
+  }
+}

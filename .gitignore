@@ -1,8 +1,10 @@
 jmeter/results/jtl/*.jtl
 jmeter/results/jtl/*.log
+jmeter/results/jtl/*.json
 jmeter/results/html/*
 !jmeter/results/html/.gitkeep
 !jmeter/results/jtl/.gitkeep
+jmeter/results/*.db
 *.log
 *.jtl~
 .idea/
@@ -10,3 +12,7 @@ jmeter/results/html/*
 .DS_Store
 Thumbs.db
 target/
+__pycache__/
+*.pyc
+.pytest_cache/
+/tmp/
